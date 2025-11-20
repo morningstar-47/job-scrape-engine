@@ -1,79 +1,105 @@
 import logging
-import os
 import sys
-import json
+import os
 
-# Add src to the system path to allow imports from src and src.modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+# --- Path Setup to handle ModuleNotFoundError: No module named 'src' ---
+# This ensures Python can find 'src/config.py' and 'src/modules/data_management.py'
+# regardless of where main.py is executed from, by adding the project root to sys.path.
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
+# Corrected Imports (using module names relative to the new path setup)
+from config import BATCH_SIZE, ID_COLUMN, CONSOLIDATED_RECIPIENT_EMAIL
+from modules.data_management import DataManager
 from modules.llm_integration import LLMInteractionModule
-from config import GROQ_API_KEY, GROQ_MODEL_NAME
+from modules.service_integration import SMTPSender, StatusUpdateHandler # NEW IMPORT
 
-# Set up logging for the test script
+# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("TEST_LLM_MODULE")
+logger = logging.getLogger(__name__)
 
-def run_llm_module_test():
+
+class AgentOrchestrator:
     """
-    Tests the LLMInteractionModule by generating a consolidated email draft 
-    using the Groq API with mock data and validating the structured output.
+    The central controller of the intelligent agent.
+    Implements the core Agent Flow logic for CONSOLIDATED batch processing.
     """
-    logger.info("--- Starting LLMInteractionModule Test (Groq Integration) ---")
-    
-    # Check 1: API Key Availability
-    if not GROQ_API_KEY:
-        logger.warning("SKIP: GROQ_API_KEY is not set. Skipping live Groq API test.")
-        return
-
-    # 2. Define Mock Input Data (List of job offers)
-    mock_batch_data = [
-        {"id_offre": "A101", "Title": "Senior Backend Developer", "Location": "Remote", "Salary": "$150k"},
-        {"id_offre": "B202", "Title": "Data Scientist Internship", "Location": "Boston, MA", "Salary": "N/A"},
-        {"id_offre": "C303", "Title": "Product Manager (AI)", "Location": "New York, NY", "Salary": "$180k+"}
-    ]
-
-    # 3. Initialize the LLM Module
-    try:
-        llm_module = LLMInteractionModule()
-        logger.info(f"LLM Module initialized. Using model: {GROQ_MODEL_NAME}")
-    except Exception as e:
-        logger.error(f"FATAL: Failed to initialize LLMInteractionModule: {e}")
-        return
-
-    # 4. Call the generation method
-    logger.info(f"Generating consolidated email for {len(mock_batch_data)} offers...")
-    email_draft = llm_module.generate_consolidated_email(mock_batch_data)
-
-    # 5. Validation and Assertions
-    
-    # Assertion 1: Check if a draft was returned
-    if email_draft is None:
-        logger.error("FAILURE: generate_consolidated_email returned None.")
-        return
-
-    # Assertion 2: Check type (should be a dict)
-    if not isinstance(email_draft, dict):
-        logger.error(f"FAILURE: Expected dict output, got {type(email_draft).__name__}.")
-        return
-
-    # Assertion 3: Check required keys (subject and body)
-    if 'subject' not in email_draft or 'body' not in email_draft:
-        logger.error("FAILURE: Output JSON is missing 'subject' or 'body' keys.")
-        logger.debug(f"Received Draft: {json.dumps(email_draft, indent=2)}")
-        return
-
-    # Assertion 4: Check content length (should be substantial)
-    if len(email_draft['body']) < 100:
-        logger.error("FAILURE: Email body is too short, indicating potential failure in content generation.")
-        logger.debug(f"Received Body: {email_draft['body']}")
-        return
+    def __init__(self):
+        logger.info("Initializing Agent Orchestrator components...")
+        # 1. Initialize Data Management Layer
+        self.data_manager = DataManager() 
         
-    logger.info("--- TEST SUCCESSFUL ---")
-    logger.info("Successfully generated and parsed structured JSON output from Groq.")
-    logger.info(f"Subject: {email_draft['subject']}")
-    logger.info(f"Body Preview: {email_draft['body']}...")
-    logger.info(f"The draft successfully contains the required keys and substantial content.")
+        # 2. Initialize LLM Layer
+        self.llm_module = LLMInteractionModule()
+        
+        # 3. Initialize External Service Integration Layer (NEW)
+        self.smtp_sender = SMTPSender()
+        self.update_handler = StatusUpdateHandler(self.data_manager) # Pass DM instance
+        logger.info("Initialization complete. Components ready.")
+
+    def run_batch(self):
+        """
+        Executes the main agent flow to process a batch of data, generate ONE email, 
+        and update the status of ALL items in that batch.
+        """
+        logger.info(f"--- Starting Consolidated Agent Run (Batch Size: {BATCH_SIZE}) ---")
+
+        try:
+            # 1. Read and Filter (Data & State Management Layer)
+            # Retrieve the entire batch of pending offers
+            pending_rows = self.data_manager.get_pending_batch(BATCH_SIZE)
+            
+            if not pending_rows:
+                logger.info("No pending rows found. Agent run finished.")
+                return
+
+            num_offers = len(pending_rows)
+            logger.info(f"Retrieved {num_offers} offers for consolidated processing.")
+
+            # 2. Drafting (Core Agent Orchestration Layer)
+            # Call the LLM ONCE with the entire list of data
+            email_draft = self.llm_module.generate_consolidated_email(pending_rows)
+            
+            if not email_draft:
+                logger.error(f"Skipping batch. Failed to generate or parse consolidated email draft from LLM.")
+                return
+            
+            logger.info("Successfully drafted consolidated email.")
+            logger.debug(f"Subject: {email_draft['subject']}")
+
+            # 3. Sending (External Service Integration Layer)
+            recipient = CONSOLIDATED_RECIPIENT_EMAIL
+            try:
+                # Use the SMTPSender to attempt sending the email
+                is_sent = self.smtp_sender.send_email(recipient, email_draft['subject'], email_draft['body'])
+                
+                # 4. Confirmation & Status Update for ALL rows
+                if is_sent:
+                    logger.info(f"Consolidated email successfully sent to {recipient}.")
+                    # Update status for every single row in the batch using the handler
+                    self.update_handler.handle_batch_sent(pending_rows, 'SENT')
+
+                    logger.info(f"Successfully processed and updated status for all {num_offers} offers.")
+                else:
+                    # If the consolidated email failed to send, mark ALL rows as error
+                    error_msg = "SMTP Failure during consolidated batch send. Check SMTP credentials."
+                    logger.warning(f"Failed to send consolidated email to {recipient}. Marking all {num_offers} offers as ERROR.")
+                    self.update_handler.handle_batch_sent(pending_rows, 'ERROR', error_msg)
+
+            except Exception as e:
+                logger.critical(f"Critical error during email send or status update: {e}")
+                error_msg = f"Critical SMTP error: {e}"
+                # If a critical failure happens, attempt to mark all records as ERROR
+                self.update_handler.handle_batch_sent(pending_rows, 'ERROR', error_msg)
+
+
+        except Exception as e:
+            logger.critical(f"A critical error occurred during the batch run: {e}")
+
+        logger.info("--- Agent Run Finished ---")
 
 
 if __name__ == "__main__":
-    run_llm_module_test()
+    orchestrator = AgentOrchestrator()
+    orchestrator.run_batch()
