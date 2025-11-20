@@ -41,12 +41,10 @@ class ClassifierAgent:
             )
             scored_jobs.append(json.loads(get_score.choices[0].message.content))
 
-        jobs_scored = json.dumps(scored_jobs)
         return scored_jobs
     
     def write_excel(self):
         jobs_scored = self.get_job_score()
-        print(type(jobs_scored))
         df = pd.DataFrame(jobs_scored)
         df.to_excel('job_scored.xlsx', index=False)
         return jobs_scored

@@ -36,15 +36,16 @@ La fiche candidat sera de la forme:
 
 et la fiche de poste sera de la forme:
 {
-  "site internet": "",
-  "entreprise": "",
-  "date de publication": "",
-  "type de poste": "",
-  "titre du poste": "",
-  "description du poste": "",
-  "tags": "",
-  "salaire": "",
-  "lien": ""
+  "job_id": "",
+  "job_title": "",
+  "employer_name": "",
+  "job_publisher": "",
+  "job_employement": "",
+  "job_description": "",
+  "job_posted_at": "",
+  "job_location": "",
+  "job_city": "",
+  "job_apply_link": ""
 }
 
 Le score doit être calculé selon le modèle suivant :
@@ -73,18 +74,24 @@ Localisation :
 - Comme dans la vraie vie, le job idéal ne force pas à déménager, tu DOIS pondérer le score en fonction de si la localisation du job est proche ou non de celle du candidat.
 - Par exemple, à scores égaux, pour un candidat habitant Paris, une offre dont la localisation est Paris devra avoir un score final plus élevé qu'une offre pour Toulouse.
 
+Date de l'offre d'emploi : 
+- De la même manière, une offre d'emploi postée récemment sera toujours plus prioritaire qu'une offre postée il y a longtemps.
+- Pour le même score, le score final d'une offre postée il y a quelques heures sera plus élevé qu'une offre postée il y a deux jours.
+
 Tu dois retourner STRICTEMENT un JSON avec cette structure :
 {
-  "site internet": "",
-  "entreprise": "",
-  "date de publication": "",
-  "type de poste": "",
-  "titre du poste": "",
-  "description du poste": "",
-  "tags": "",
-  "salaire": "",
-  "lien": "",
+  "job_id": "",
+  "job_title": "",
+  "employer_name": "",
+  "job_publisher": "",
+  "job_employement": "",
+  "job_description": "",
+  "job_posted_at": "",
+  "job_location": "",
+  "job_city": "",
+  "job_apply_link": "",
   "score":0
 }
-ce qui correspond donc au JSON de l'offre d'emploi ue tu as reçu en entrée agrémenté du score de matching lié à cette offre d'emploi.
+
+ce qui correspond donc au JSON de l'offre d'emploi que tu as reçu en entrée agrémentée du score de matching lié à cette offre d'emploi.
 Le JSON doit être valide. Pas de texte en dehors d'un JSON.
