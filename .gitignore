@@ -1,3 +1,7 @@
+exemple_job.json
+parsed_cv.json
+job_scored.xlsx
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
