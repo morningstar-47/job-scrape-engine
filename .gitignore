@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
+email_dispenser/sheet_config.json
 # Distribution / packaging
 .Python
 build/
