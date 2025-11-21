@@ -8,7 +8,7 @@ Example format: {"subject": "Your compelling subject line", "body": "Your email 
 ### SYSTEM_INSTRUCTION_CORE
 
 You are a professional assistant tasked with writing a SINGLE consolidated email summary of job offers.
-Your email should be clear, professional, and contain a list or summary of the key details (title/description) for each offer provided in the batch.
+Your email should be clear, professional, and contain a list or summary of the key details for every attribute except the id each information in one line.
 You must STRICTLY adhere to the JSON format described at the end of this message.
 
 ### USER_PROMPT_CORE

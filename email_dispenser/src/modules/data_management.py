@@ -7,7 +7,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread.exceptions import SpreadsheetNotFound, WorksheetNotFound
 
-from config import SHEET_ID, SHEET_NAME, ID_COLUMN, STATUS_COLUMN, BATCH_SIZE, SERVICE_ACCOUNT_FILE, SCOPES
+# --- FIX: Changed absolute import (src.config) to relative import (..config) ---
+from config import SHEET_ID, SHEET_NAME, ID_COLUMN, STATUS_COLUMN, SCORE_COLUMN, BATCH_SIZE, SERVICE_ACCOUNT_FILE, SCOPES
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class DataManager:
         self.sheet_name = SHEET_NAME
         self.id_col = ID_COLUMN
         self.status_col = STATUS_COLUMN
+        self.score_col = SCORE_COLUMN # NEW: Initialize score column name
         self.worksheet = self._authenticate_and_build_service() # Now returns the worksheet object
         self.df = self._load_data()
 
@@ -64,7 +66,7 @@ class DataManager:
     def _load_data(self) -> pd.DataFrame:
         """
         Reads all data from the Google Sheet range using gspread.
-        Initializes the status column if it doesn't exist.
+        Ensures status and score columns exist and are of the correct type.
         """
         if not self.worksheet:
             return pd.DataFrame()
@@ -89,11 +91,20 @@ class DataManager:
                 if self.status_col not in df.columns:
                     df[self.status_col] = 'PENDING'
                     logger.info(f"Initialized new column '{self.status_col}' with 'PENDING' status locally.")
-
+                
+                # NEW: Ensure score column exists and is numeric
+                if self.score_col not in df.columns:
+                    # If the column is missing, initialize it with a default score of 0
+                    df[self.score_col] = 0 
+                    logger.warning(f"Initialized missing score column '{self.score_col}' with default value 0.")
+                
                 # Convert ID column to integer type for consistent lookup
                 # gspread returns strings, so we must coerce types carefully
                 df[self.id_col] = pd.to_numeric(df[self.id_col], errors='coerce').fillna(-1).astype(int)
-
+                
+                # Convert Score column to numeric, errors='coerce' turns non-numeric into NaN, then fill NaN with 0
+                df[self.score_col] = pd.to_numeric(df[self.score_col], errors='coerce').fillna(0) # Ensure it's treated as a number
+                
                 logger.info(f"Successfully loaded {len(df)} records from Google Sheet.")
                 return df
 
@@ -108,8 +119,8 @@ class DataManager:
 
     def get_pending_batch(self, batch_size: int = BATCH_SIZE) -> list[dict]:
         """
-        Row Selector Role: Filters for PENDING rows and returns a limited batch.
-        Refreshes the data before filtering to catch external updates.
+        Row Selector Role: Filters for PENDING rows, sorts by score (highest first), 
+        and returns a limited batch. Refreshes the data before filtering to catch external updates.
         """
         # Refresh data before filtering to ensure we have the latest status
         self.df = self._load_data() 
@@ -118,13 +129,22 @@ class DataManager:
             return []
 
         # Filter for rows that are PENDING
-        pending_df = self.df[self.df[self.status_col] == 'PENDING']
+        pending_df = self.df[self.df[self.status_col] == 'PENDING'].copy() # Use .copy() to avoid SettingWithCopyWarning
         
         if pending_df.empty:
             logger.info("No more PENDING rows to process.")
             return []
 
-        # Limit to the defined batch size
+        # NEW: Sort by score attribute, highest score first (descending=False)
+        if self.score_col in pending_df.columns:
+            # We sort the PENDING rows by score, with the highest score first
+            pending_df = pending_df.sort_values(by=self.score_col, ascending=False)
+            logger.debug(f"Pending offers sorted by {self.score_col} (Highest score first).")
+        else:
+            logger.warning(f"Cannot sort: '{self.score_col}' column is missing or was not loaded correctly. Proceeding without sort.")
+
+
+        # Limit to the defined batch size (taking the top N after sorting)
         batch_df = pending_df.head(batch_size)
         
         # Convert to a list of dicts (JSON-like structure) for the Orchestrator
