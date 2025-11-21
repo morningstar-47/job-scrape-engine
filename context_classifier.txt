@@ -18,6 +18,24 @@ La fiche candidat sera de la forme:
         "end": ""
       },
       "missions": []
+    },
+    {
+      "title": "",
+      "company": "",
+      "period": {
+        "start": "",
+        "end": ""
+      },
+      "missions": []
+    },
+    {
+      "title": "",
+      "company": "",
+      "period": {
+        "start": "",
+        "end": ""
+      },
+      "missions": []
     }
   ],
   "education": [
@@ -28,12 +46,20 @@ La fiche candidat sera de la forme:
         "start": "",
         "end": ""
       }
+    },
+    {
+      "degree": "",
+      "school": "",
+      "period": {
+        "start": "",
+        "end": ""
+      }
     }
   ],
   "certifications": [],
-  "keywords": []
+  "keywords": [],
+  "query":""
 }
-
 et la fiche de poste sera de la forme:
 {
   "job_id": "",

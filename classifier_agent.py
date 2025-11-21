@@ -46,6 +46,7 @@ class ClassifierAgent:
     def write_excel(self):
         jobs_scored = self.get_job_score()
         df = pd.DataFrame(jobs_scored)
+        df["status"] = "pending"
         df.to_excel('job_scored.xlsx', index=False)
         return jobs_scored
     
