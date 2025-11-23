@@ -18,12 +18,12 @@ class ClassifierAgent:
         get the relevance score
         """
         # Get the context
-        f = open('context_classifier.txt', 'r')
+        f = open('classifier_agent/context_classifier.txt', 'r')
         context = f.read()
         f.close()
 
         # Get the user_prompt
-        f = open('prompt_classifier.txt', 'r')
+        f = open('classifier_agent/prompt_classifier.txt', 'r')
         user_prompt = f.read()
         f.close()
 
@@ -52,11 +52,11 @@ class ClassifierAgent:
     
 if __name__ == "__main__":
     #Get job_offer_list
-    with open("exemple_job.json", "r", encoding="utf-8") as f:
+    with open("classifier_agent/exemple_job.json", "r", encoding="utf-8") as f:
         job_offer_list = json.load(f)
     
     #Get parsed_resume
-    with open("parsed_cv.json", "r", encoding="utf-8") as f:
+    with open("classifier_agent/parsed_cv.json", "r", encoding="utf-8") as f:
         parsed_resume = json.load(f)
 
     classifier_agent = ClassifierAgent(job_offer_list, parsed_resume)

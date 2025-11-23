@@ -12,18 +12,18 @@ class QuestionnerAgent:
         self.job_offer_list = job_offer_list
         self.parsed_resume = parsed_resume
     
-    def get_job_score(self):
+    def get_questions(self):
         """
         Script to send the job offer list and parsed cv to LLM and 
         get the most relevant questions
         """
         # Get the context
-        f = open('context_classifier.txt', 'r')
+        f = open('context_questionner.txt', 'r')
         context = f.read()
         f.close()
 
         # Get the user_prompt
-        f = open('prompt_classifier.txt', 'r')
+        f = open('prompt_questionner.txt', 'r')
         user_prompt = f.read()
         f.close()
 
@@ -41,13 +41,6 @@ class QuestionnerAgent:
             questions_list.append(json.loads(get_score.choices[0].message.content))
 
         return questions_list
-    
-    def write_excel(self):
-        jobs_scored = self.get_job_score()
-        df = pd.DataFrame(jobs_scored)
-        df["status"] = "pending"
-        df.to_excel('job_scored.xlsx', index=False)
-        return jobs_scored
     
 if __name__ == "__main__":
     #Get job_offer_list
