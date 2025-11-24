@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from typing import List, Dict
 
 # Relative imports from the project structure
-from config import SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL
+from config import SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL,LETTER_COLUMN
 from .data_management import DataManager # Used by StatusUpdateHandler
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class StatusUpdateHandler:
     def __init__(self, data_manager: DataManager):
         self.data_manager = data_manager
 
-    def handle_batch_sent(self, batch_data: List[Dict], status: str, error_message: str = None):
+    def handle_batch_sent(self, batch_data: List[Dict], status: str, motivation_letters=None):
         """
         Updates the status for all records in the batch.
         
@@ -113,4 +113,6 @@ class StatusUpdateHandler:
         for row_data in batch_data:
             record_id = row_data[self.data_manager.id_col]
             # Use the DataManager to physically write the status to the sheet
-            self.data_manager.update_status(record_id, status, error_message)
+            self.data_manager.update_status(record_id, status)
+            print("motivation letter :", motivation_letters)
+            self.data_manager.update_motivation_letter(record_id,motivation_letters[record_id])

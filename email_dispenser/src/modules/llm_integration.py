@@ -21,6 +21,7 @@ class LLMInteractionModule:
         
         # New: Load all prompt components from the external file
         self.prompts = self._load_prompts()
+        self.cv_prompt = self._load_CV_prompt()
         
         if not self.api_key:
             logger.error("GROQ_API_KEY is missing. LLM module will not function.")
@@ -28,10 +29,46 @@ class LLMInteractionModule:
         elif not self.prompts:
             logger.error("Failed to load prompts from context.txt. LLM module will not function.")
             self.client = None
+        elif not self.cv_prompt:
+            logger.error("Failed to load cv prompts from cv_prompt.txt. LLM module will not function.")
+            self.client = None
         else:
             # Initialize the Groq client, which automatically picks up the API key
             self.client = Groq(api_key=self.api_key)
+    def _load_CV_prompt(self) ->Dict[str,str]:
+        """
+        Read the CV context and parse it into a dictionary.
+        """
+        context_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cv_prompt.txt')
+        if not os.path.exists(context_file_path):
+            logger.error(f"Context file not found at: {context_file_path}")
+            return {}
+        try:
+            with open(context_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
 
+            # Simple parsing using markers defined in context.txt
+            sections = content.split('###')
+            
+            # Map sections to keys (skipping the first empty element)
+            prompts = {}
+            for section in sections[1:]:
+                lines = section.strip().split('\n', 1)
+                if len(lines) == 2:
+                    key = lines[0].strip()
+                    value = lines[1].strip()
+                    prompts[key] = value
+            
+            if 'Motivation Letter redaction' not in prompts:
+                logger.error("Missing critical 'Motivation Letter redaction' in cv_context.txt")
+                return {}
+
+            logger.info("Successfully loaded LLM prompts from cv_prompt.txt.")
+
+            return prompts
+        except Exception as e:
+            logger.error(f"Error reading or parsing context.txt: {e}")
+            return {}
     def _load_prompts(self) -> Dict[str, str]:
         """
         Reads prompt context from src/context.txt and parses it into a dictionary.
@@ -65,7 +102,6 @@ class LLMInteractionModule:
 
             logger.info("Successfully loaded LLM prompts from context.txt.")
             return prompts
-
         except Exception as e:
             logger.error(f"Error reading or parsing context.txt: {e}")
             return {}
@@ -106,8 +142,58 @@ class LLMInteractionModule:
                 logger.error(f"An unexpected error occurred during Groq API call: {e}")
                 return None
         return None
-    
-    def generate_consolidated_email(self, data_batch: List[Dict[str, str]]) -> Dict[str, str] | None:
+    def generate_motivation_letter(self, offer:Dict[str,str], CV : Dict[str,any]):
+        """
+        generate a motivation letter based on the offer and the CV
+        """
+        if not self.cv_prompt :
+            return None
+
+        system_instruction = (
+            f"{self.cv_prompt["Motivation Letter redaction"]} "
+            f"{self.cv_prompt['Structure et Contenu Exigés']}"
+            )
+ 
+        user_prompt = (
+            f"{self.cv_prompt['Documents Sources (OBLIGATOIRE)']} "
+            f"Offre : \n{json.dumps(offer)}"
+            f"CV de candidat : \n{json.dumps(CV)}"
+            )
+        payload = {
+            "model":self.model_name,
+            "messages": [
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_prompt}
+            ],
+            "response_format": {"type": "json_object"} 
+        }
+ 
+        # 3. Call API
+        # logger.info(f"Generating consolidated email content for batch of {len(data_batch)} offers using Groq SDK...")
+        api_response = self._generate_content_with_retry(payload)
+        if not api_response:
+            logger.error(f"Failed to get a consolidated response.")
+            return None
+
+        # 4. Extract and Parse Content
+        try:
+            # SDK response strlucture: choices[0].message.content
+            json_text = api_response['choices'][0]['message']['content']
+            motivation_letter = json.loads(json_text)
+            
+            # Basic validation
+            if 'subject' in motivation_letter and 'body' in motivation_letter:
+                logger.info(f"Successfully parsed motivation_letter")
+                return motivation_letter
+            else:
+                logger.error(f"Parsed JSON is missing 'subject' or 'body' keys: {email_draft}")
+                return None
+
+        except (KeyError, json.JSONDecodeError) as e:
+            logger.error(f"Error parsing JSON response: {e}")
+            logger.debug(f"Raw API Response: {api_response}")
+            return None
+    def generate_consolidated_email(self, data_batch: List[Dict[str, str]], CV  : Dict[str, any]) -> Dict[str, str] | None:
         """
         Generates a SINGLE consolidated email draft summarizing the entire batch of offers.
         """
@@ -126,6 +212,7 @@ class LLMInteractionModule:
         user_prompt = (
             f"{self.prompts['USER_PROMPT_CORE']}\n\n"
             f"Batch data (List of offers):\n{json.dumps(data_batch, indent=2)}"
+            f"CV of the candidate : \n {json.dumps(CV,indent=2)}"
         )
 
         # 2. Construct Payload (Groq SDK Format)
@@ -148,7 +235,7 @@ class LLMInteractionModule:
 
         # 4. Extract and Parse Content
         try:
-            # SDK response structure: choices[0].message.content
+            # SDK response strlucture: choices[0].message.content
             json_text = api_response['choices'][0]['message']['content']
             email_draft = json.loads(json_text)
             

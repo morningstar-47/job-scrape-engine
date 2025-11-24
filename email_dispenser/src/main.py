@@ -49,22 +49,31 @@ class AgentOrchestrator:
             # 1. Read and Filter (Data & State Management Layer)
             # Retrieve the entire batch of pending offers
             pending_rows = self.data_manager.get_pending_batch(BATCH_SIZE)
-            
+
+            cv_data = self.data_manager.cv_data
             if not pending_rows:
                 logger.info("No pending rows found. Agent run finished.")
                 return
-
+            if not cv_data:
+                logger.info("cv missing. Agent run finished")
+                return
             num_offers = len(pending_rows)
             logger.info(f"Retrieved {num_offers} offers for consolidated processing.")
 
             # 2. Drafting (Core Agent Orchestration Layer)
             # Call the LLM ONCE with the entire list of data
-            email_draft = self.llm_module.generate_consolidated_email(pending_rows)
-            
+            motivation_letters = {}
+            for offer in pending_rows:
+                letter = self.llm_module.generate_motivation_letter(offer,cv_data)
+                motivation_letters[offer[self.data_manager.id_col]] = letter
+        
+            email_draft = self.llm_module.generate_consolidated_email(pending_rows,cv_data)
+            if not motivation_letters :
+                logger.error(f"Skipping batch. Failed to generate or parse motivation letter draft from LLM.")
+                return
             if not email_draft:
                 logger.error(f"Skipping batch. Failed to generate or parse consolidated email draft from LLM.")
                 return
-            
             logger.info("Successfully drafted consolidated email.")
             logger.debug(f"Subject: {email_draft['subject']}")
 
@@ -78,7 +87,8 @@ class AgentOrchestrator:
                 if is_sent:
                     logger.info(f"Consolidated email successfully sent to {recipient}.")
                     # Update status for every single row in the batch using the handler
-                    self.update_handler.handle_batch_sent(pending_rows, 'SENT')
+                    print("motivation : ",motivation_letters)
+                    self.update_handler.handle_batch_sent(pending_rows, 'SENT',motivation_letters)
 
                     logger.info(f"Successfully processed and updated status for all {num_offers} offers.")
                 else:
@@ -95,6 +105,7 @@ class AgentOrchestrator:
 
 
         except Exception as e:
+            print(e)
             logger.critical(f"A critical error occurred during the batch run: {e}")
 
         logger.info("--- Agent Run Finished ---")

@@ -16,4 +16,6 @@ You must STRICTLY adhere to the JSON format described at the end of this message
 Please generate ONE follow-up email draft (subject and body) that consolidates the information for all the job offers provided in this batch.
 List the offers clearly within the email body. The output must be the FINAL JSON.
 
+
+
 Batch data (List of offers):

@@ -1,0 +1,18 @@
+{
+    "type_post": "CDI",
+    "ville_candidat": "Paris, France",
+    "description_candidat": "Ingénieur Data expérimenté avec 5 ans d'expérience dans la conception, la construction et la maintenance de pipelines de données (ETL/ELT) à haute performance. Spécialisé dans les environnements cloud AWS et Azure.",
+    "competence": [
+      "Python",
+      "Spark (PySpark)",
+      "SQL (PostgreSQL, MySQL)",
+      "AWS (S3, EMR, Redshift)",
+      "Kafka",
+      "Airflow"
+    ],
+    "experience": [
+      "Lead Data Engineer chez Grande Banque (3 ans)",
+      "Data Pipeline Developer chez Startup Tech (2 ans)"
+    ],
+    "query": "Recherche poste de Lead Data Engineer ou Architecte Data en CDI dans le secteur de la Fintech ou de l'énergie."
+  }
