@@ -1,0 +1,27 @@
+Analyse l’image fournie et extrait toutes les informations liées au candidat afin de construire un profil exploitable par un système de matching d’offres d’emploi.
+
+Ta réponse doit OBLIGATOIREMENT être un JSON strict avec la structure suivante :
+
+{
+  "type_poste": "",
+  "ville_candidat": "",
+  "description_candidat": "",
+  "competences": [],
+  "experience": [],
+  "Query":"Une description du cv"
+}
+
+Détails attendus :
+
+- "type_poste" : le poste visé ou exercé
+- "ville_candidat" : ville ou zone géographique déduite du document
+- "description_candidat" : résumé clair (2–4 lignes)
+- "competences" : liste de compétences visibles dans l’image
+- "experience" : objets du type 
+    {"poste": "", "entreprise": "", "dates": "", "details": ""}
+-"Query":""
+
+
+Si une information est manquante, retourne simplement une chaîne vide ou une liste vide.
+
+Ne renvoie que le JSON, rien d’autre.

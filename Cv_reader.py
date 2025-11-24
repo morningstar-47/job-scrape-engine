@@ -7,7 +7,7 @@ import os
 import json
 import docx
 from PyPDF2 import PdfReader
-from streamlit import audio_input
+import base64
 
 load_dotenv()
 
@@ -26,6 +26,64 @@ def extract_text_from_pdf(pdf_path):
 def extract_text_from_docx(docx_path):
     doc = docx.Document(docx_path)
     return "\n".join([para.text for para in doc.paragraphs])
+
+# Function to encode the image
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+# ...existing code...
+def ask_vision(image_input):
+    """
+    image_input: chemin (str/Path) ou objet fichier avec .read() (Streamlit UploadedFile, BytesIO) ou bytes.
+    Retourne le JSON parsé fourni par le modèle.
+    """
+    # Lire les bytes de l'image quel que soit le type d'input
+    if isinstance(image_input, (str, Path)):
+        with open(image_input, "rb") as f:
+            image_bytes = f.read()
+    elif isinstance(image_input, (bytes, bytearray)):
+        image_bytes = bytes(image_input)
+    elif hasattr(image_input, "read"):
+        # file-like (Streamlit UploadedFile, io.BytesIO, etc.)
+        image_bytes = image_input.read()
+        # tenter de remettre le curseur au début pour réutilisation éventuelle
+        try:
+            image_input.seek(0)
+        except Exception:
+            pass
+    else:
+        raise ValueError("image_input doit être un chemin, des bytes ou un objet fichier avec .read()")
+
+    base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": read_file("contexte_image.txt")
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": read_file("prompt_image.txt")},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}",
+                        },
+                    },
+                ],
+            }
+        ],
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        response_format={"type": "json_object"}
+    )
+
+    result = json.loads(chat_completion.choices[0].message.content)
+    return result
 
 def read_cv(file_input):
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
@@ -69,6 +127,19 @@ def read_cv(file_input):
         response_format={"type": "json_object",}
     )
     return response.choices[0].message.content
+
+def call_chatbot_api(user_message: str):
+    url = "https://ton-agent-chatbot.com/chat"  # 🔥 À remplacer par ton endpoint réel
+
+    payload = {"message": user_message}
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        return response.json().get("response", "Erreur : réponse vide.")
+    else:
+        return f"Erreur API ({response.status_code}) : {response.text}"
 
 if __name__ == "__main__":
     # Exemple d'utilisation
