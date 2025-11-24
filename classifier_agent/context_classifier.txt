@@ -3,6 +3,8 @@ Tu es un expert en recrutement et matching de profils techniques.
 
 La fiche candidat sera de la forme:
 {
+  "adress_city":"",
+  "adress_country":"",
   "summary": "",
   "skills": {
     "technical": [],
@@ -71,7 +73,9 @@ et la fiche de poste sera de la forme:
   "job_posted_at": "",
   "job_location": "",
   "job_city": "",
-  "job_apply_link": ""
+  "job_country":"",
+  "job_apply_link": "",
+  "distance_between_cities":0
 }
 
 Le score doit être calculé selon le modèle suivant :
@@ -116,8 +120,9 @@ Tu dois retourner STRICTEMENT un JSON avec cette structure :
   "job_location": "",
   "job_city": "",
   "job_apply_link": "",
+  "distance_between_cities":0
   "score":0
 }
 
-ce qui correspond donc au JSON de l'offre d'emploi que tu as reçu en entrée agrémentée du score de matching lié à cette offre d'emploi.
+ce qui correspond donc au JSON de l'offre d'emploi que tu as reçu en entrée agrémentée du score de matching lié à cette offre d'emploi ainsi que la distance en minutes donnée en entrée également.
 Le JSON doit être valide. Pas de texte en dehors d'un JSON.

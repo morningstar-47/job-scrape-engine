@@ -18,12 +18,12 @@ class QuestionnerAgent:
         get the most relevant questions
         """
         # Get the context
-        f = open('context_questionner.txt', 'r')
+        f = open('questionner_agent/context_questionner.txt', 'r')
         context = f.read()
         f.close()
 
         # Get the user_prompt
-        f = open('prompt_questionner.txt', 'r')
+        f = open('questionner_agent/prompt_questionner.txt', 'r')
         user_prompt = f.read()
         f.close()
 
@@ -44,12 +44,12 @@ class QuestionnerAgent:
     
 if __name__ == "__main__":
     #Get job_offer_list
-    with open("exemple_job.json", "r", encoding="utf-8") as f:
+    with open("questionner_agent/exemple_job.json", "r", encoding="utf-8") as f:
         job_offer_list = json.load(f)
     
     #Get parsed_resume
-    with open("parsed_cv.json", "r", encoding="utf-8") as f:
+    with open("questionner_agent/parsed_cv.json", "r", encoding="utf-8") as f:
         parsed_resume = json.load(f)
 
-    classifier_agent = QuestionnerAgent(job_offer_list, parsed_resume)
-    classifier_agent.write_excel()
+    questionner_agent = QuestionnerAgent(job_offer_list, parsed_resume)
+    print(questionner_agent.get_questions())

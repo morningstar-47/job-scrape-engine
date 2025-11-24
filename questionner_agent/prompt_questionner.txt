@@ -25,4 +25,4 @@ Analyse le problème selon les règles du contexte, et renvoie un JSON strict re
     }
   ]
 }
-Voici (1) le CV du candidat et (2) l'offre d'emploi:
+Voici (1) le CV du candidat et (2) les offres d'emploi:

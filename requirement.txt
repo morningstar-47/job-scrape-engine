@@ -2,3 +2,5 @@ groq
 pandas
 openpyxl
 python-dotenv
+google-maps-routing
+pycountry

@@ -4,6 +4,7 @@ import json
 from groq import Groq
 import pandas as pd
 from dotenv import load_dotenv
+from utils import travel_time_from_cities
 
 class ClassifierAgent:
     load_dotenv()
@@ -11,6 +12,18 @@ class ClassifierAgent:
         self.client = Groq(api_key=os.getenv("GROQ_KEY"))
         self.job_offer_list = job_offer_list
         self.parsed_resume = parsed_resume
+    
+    def get_best_travel_time(self, job, parsed_resume):
+        time_by_transport_mean = []
+        for transport_mean in ["WALK", "DRIVE", "TRANSIT", "BICYCLE"]:
+            minutes = travel_time_from_cities(api_key=os.getenv("GOOGLE_MAPS_API_KEY"), 
+                                              origin_city=job["job_city"], 
+                                              origin_country=job["job_country"], 
+                                              destination_city=parsed_resume["adress_city"], 
+                                              destination_country=parsed_resume["adress_country"], 
+                                              travel_mode=transport_mean)
+            time_by_transport_mean.append(minutes)
+        return min(time_by_transport_mean)
     
     def get_job_score(self):
         """
@@ -30,10 +43,11 @@ class ClassifierAgent:
         # Get the Groq API response:
         scored_jobs = []
         for job in job_offer_list:
+            distance = self.get_best_travel_time(job, parsed_resume)
             get_score = self.client.chat.completions.create(
                 messages = [
                     {"role": "system", "content": context},
-                    {"role": "user", "content": user_prompt+json.dumps(parsed_resume)+json.dumps(job)},
+                    {"role": "user", "content": user_prompt+json.dumps(parsed_resume)+json.dumps(job)+json.dumps(distance)},
             ],
             model="openai/gpt-oss-120b",
             temperature=0.0,
