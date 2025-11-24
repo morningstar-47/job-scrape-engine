@@ -5,16 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def country_name_to_code(country_name):
-    country = pycountry.countries.get(name=country_name)
-    if country:
-        return country.alpha_2
-
 def geocode_city(api_key, city_name, country_name):
     url = "https://maps.googleapis.com/maps/api/geocode/json"
 
     address = city_name
-    address += f", {country_name_to_code(country_name)}"
+    address += f", {country_name}"
 
     params = {
         "address": address,

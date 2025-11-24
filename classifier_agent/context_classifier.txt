@@ -100,13 +100,16 @@ Formation :
 - Diplôme proche : 70
 - Hors domaine : 30
 
+Tout ceci forme un premier score, que l'on appelle scoreA. Il faut maintenant ajouter la localisation dans cette équation.
+
 Localisation : 
-- Comme dans la vraie vie, le job idéal ne force pas à déménager, tu DOIS pondérer le score en fonction de si la localisation du job est proche ou non de celle du candidat.
-- Par exemple, à scores égaux, pour un candidat habitant Paris, une offre dont la localisation est Paris devra avoir un score final plus élevé qu'une offre pour Toulouse.
+- La distance en minutes, donnée en entrée, doit jouer sur le score final. 
+- Toute distance au delà de 90 doit entrainer une dimunution de 50% du score.
 
 Date de l'offre d'emploi : 
 - De la même manière, une offre d'emploi postée récemment sera toujours plus prioritaire qu'une offre postée il y a longtemps.
 - Pour le même score, le score final d'une offre postée il y a quelques heures sera plus élevé qu'une offre postée il y a deux jours.
+- Si une offre d'emploi a plus d'une semaine, son score est automatiquement de 0.
 
 Tu dois retourner STRICTEMENT un JSON avec cette structure :
 {
