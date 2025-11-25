@@ -1,7 +1,7 @@
 import gspread
 import pandas as pd
 
-def write_google_sheet(df: pd.DataFrame, spreadsheet_title: str, credentials_path: str = 'credentials.json', start_cell: str = 'A1'):
+def write_google_sheet(df: pd.DataFrame, spreadsheet_title: str, credentials_path: str, start_cell: str = 'A1'):
     if df.empty:
         print("⚠️ Le DataFrame fourni est vide. Opération annulée.")
         return False

@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from utils import travel_time_from_cities
 from sheets_writer import write_google_sheet
 
-TITRE_FEUILLE = "Mon Exemple de Feuille Python"
-CHEMIN_CREDS = 'credentials.json'
+TITRE_FEUILLE = "Personnalized Job Offers"
+CHEMIN_CREDS = 'classifier_agent/credentials.json'
 
 class ClassifierAgent:
     load_dotenv()
@@ -65,7 +65,7 @@ class ClassifierAgent:
         jobs_scored = self.get_job_score()
         df = pd.DataFrame(jobs_scored).sort_values("score", ascending=False)
         df["status"] = "pending"
-        success = write_google_sheet(TITRE_FEUILLE, CHEMIN_CREDS)
+        success = write_google_sheet(df, TITRE_FEUILLE, CHEMIN_CREDS, "A1")
         if success:
             return jobs_scored
         else:
