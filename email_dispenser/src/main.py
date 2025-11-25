@@ -112,7 +112,6 @@ class AgentOrchestrator:
 
 
         except Exception as e:
-            print(e)
             logger.critical(f"A critical error occurred during the batch run: {e}")
 
         logger.info("--- Agent Run Finished ---")

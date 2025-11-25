@@ -153,5 +153,4 @@ class StatusUpdateHandler:
             record_id = row_data[self.data_manager.id_col]
             # Use the DataManager to physically write the status to the sheet
             self.data_manager.update_status(record_id, status)
-            print("motivation letter :", motivation_letters)
-            self.data_manager.update_motivation_letter(record_id,motivation_letters[record_id])
+            # self.data_manager.update_motivation_letter(record_id,motivation_letters[record_id])
