@@ -32,7 +32,6 @@ def encode_image(image_path):
   with open(image_path, "rb") as image_file:
     return base64.b64encode(image_file.read()).decode('utf-8')
 
-# ...existing code...
 def ask_vision(image_input):
     """
     image_input: chemin (str/Path) ou objet fichier avec .read() (Streamlit UploadedFile, BytesIO) ou bytes.
@@ -129,15 +128,15 @@ def read_cv(file_input):
     return response.choices[0].message.content
 
 def call_chatbot_api(user_message: str):
-    url = "https://ton-agent-chatbot.com/chat"  # 🔥 À remplacer par ton endpoint réel
+    url = "https://c44c2f38895b.ngrok-free.app/chat"  
 
-    payload = {"message": user_message}
+    payload = {"message": user_message, "session_id": "session12345"}
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        return response.json().get("response", "Erreur : réponse vide.")
+        return response.json().get("answer", "Pas de réponse reçue.")
     else:
         return f"Erreur API ({response.status_code}) : {response.text}"
 
@@ -145,4 +144,7 @@ if __name__ == "__main__":
     # Exemple d'utilisation
     cv_path = "C:\\Users\\sebas\\OneDrive\\Bureau\\M5-HETIC\\Agents\\Projet Scrappy Offres\\job-scrape-engine\\CV Sebastian Data.pdf"  # Remplacez par le chemin de votre CV
     analysis = read_cv(cv_path)
-    print(analysis)
+    
+    #reponse = call_chatbot_api("Salut")
+    #print(reponse)
+    #print(analysis)

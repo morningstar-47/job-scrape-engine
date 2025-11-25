@@ -1,6 +1,7 @@
 import streamlit as st
 from Cv_reader import read_cv, call_chatbot_api, ask_vision
 import json
+import requests
 
 st.set_page_config(page_title="Synthétiseur de CV", layout="centered", page_icon="📝")
 
@@ -22,6 +23,8 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+API_URL = "http://localhost:8000"
 
 st.title("📝 Synthétiseur de CV")
 st.markdown(
@@ -55,23 +58,38 @@ if uploaded_file is not None:
     if st.button("🔍 Analyser le fichier"):
         with st.spinner("Analyse en cours..."):
             try:
+                # Préparer le fichier pour l'upload
+                files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                
+                # Appel à l'API CV Reader exposée
+                response = requests.post(f"{API_URL}/cv-reader", files=files, timeout=60)
+                response.raise_for_status()
+                
+                api_result = response.json()
+                
                 if is_pdf or is_docx:
-                    resultats = read_cv(uploaded_file)
-                    # afficher JSON formaté ou tableau markdown comme avant
+                    # Récupérer le résultat de l'analyse
+                    resultats = api_result.get("result", {})
+                    
+                    st.subheader("🔍 Résultat de l'analyse CV")
                     try:
-                        result_dict = json.loads(resultats)
+                        if isinstance(resultats, str):
+                            result_dict = json.loads(resultats)
+                        else:
+                            result_dict = resultats
+                        
                         markdown_table = "| Clé | Valeur |\n|---|---|\n"
                         for key, value in result_dict.items():
                             markdown_table += f"| {key} | {str(value).replace(chr(10), '<br>')} |\n"
-                        st.subheader("🔍 Résultat de l'analyse CV")
                         st.markdown(markdown_table, unsafe_allow_html=True)
                     except Exception:
-                        st.subheader("🔍 Résultat brut")
                         st.json(resultats)
+                    
                     st.subheader("🔍 Matching de votre CV avec les meilleures offres d'emploi ...")
+                    st.info(f"📊 Analysis ID: {api_result.get('analysis_id')} (utilisé par les autres agents)")
 
                 elif is_image:
-                    vision_result = ask_vision(uploaded_file)
+                    vision_result = api_result.get("result", {})
                     st.subheader("🔍 Résultat vision")
                     if isinstance(vision_result, (dict, list)):
                         with st.expander("Voir le JSON formaté"):
@@ -82,15 +100,16 @@ if uploaded_file is not None:
                                 md += f"| {k} | {str(v).replace(chr(10), '<br>')} |\n"
                             st.markdown(md, unsafe_allow_html=True)
                     else:
-                        try:
-                            parsed = json.loads(vision_result)
-                            st.json(parsed)
-                        except Exception:
-                            st.text(str(vision_result))
+                        st.text(str(vision_result))
                 else:
                     st.error("Type de fichier non supporté.")
+                    
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Impossible de se connecter à l'API CV Reader (http://localhost:8000). Vérifie qu'elle est démarrée.")
+            except requests.exceptions.Timeout:
+                st.error("❌ Timeout : l'API CV Reader a mis trop longtemps à répondre.")
             except Exception as e:
-                st.error(f"Erreur lors de l'analyse : {e}")
+                st.error(f"❌ Erreur lors de l'appel à l'API : {e}")
 else:
     st.warning("Aucun fichier importé. Veuillez téléverser un CV ou une image pour commencer l'analyse.")
 st.divider()
