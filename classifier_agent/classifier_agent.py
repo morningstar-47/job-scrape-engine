@@ -24,8 +24,8 @@ class ClassifierAgent:
             minutes = travel_time_from_cities(api_key=os.getenv("GOOGLE_MAPS_API_KEY"), 
                                               origin_city=job["job_city"], 
                                               origin_country=job["job_country"], 
-                                              destination_city=parsed_resume["adress_city"], 
-                                              destination_country=parsed_resume["adress_country"], 
+                                              destination_city=parsed_resume["address_city"], 
+                                              destination_country=parsed_resume["address_country"], 
                                               travel_mode=transport_mean)
             time_by_transport_mean.append(minutes)
         return min(time_by_transport_mean)
@@ -78,8 +78,11 @@ if __name__ == "__main__":
     with open("classifier_agent/exemple_job.json", "r", encoding="utf-8") as f:
         job_offer_list = json.load(f)
     
+    #with open("classifier_agent/parsed_cv.json", "r", encoding="utf-8") as f:
+     #   parsed_resume = json.load(f)
+
     #Get parsed_resume
     parsed_resume = get_json_from_parser()
-
+    parsed_resume = json.loads(parsed_resume["result"])
     classifier_agent = ClassifierAgent(job_offer_list, parsed_resume)
     classifier_agent.write_excel()

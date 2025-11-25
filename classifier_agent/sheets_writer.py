@@ -1,5 +1,6 @@
 import gspread
 import pandas as pd
+from gspread.exceptions import SpreadsheetNotFound
 
 def write_google_sheet(df: pd.DataFrame, spreadsheet_title: str, credentials_path: str, start_cell: str = 'A1'):
     if df.empty:
@@ -10,7 +11,16 @@ def write_google_sheet(df: pd.DataFrame, spreadsheet_title: str, credentials_pat
     gc = gspread.service_account(filename=credentials_path)
 
     # 2. Ouvrir la feuille de calcul
-    sh = gc.open(spreadsheet_title)
+    try:
+        # Tente d'ouvrir la feuille existante
+        sh = gc.open(spreadsheet_title)
+        print(f"Feuille de calcul ouverte avec succès : '{spreadsheet_title}'")
+        
+    except SpreadsheetNotFound:
+        # La feuille n'existe pas, on la crée
+        sh = gc.create(spreadsheet_title)
+        print(f"Feuille de calcul créée avec succès : '{spreadsheet_title}'")
+    
     worksheet = sh.sheet1
 
     # 3. Préparer les données pour gspread
@@ -21,7 +31,7 @@ def write_google_sheet(df: pd.DataFrame, spreadsheet_title: str, credentials_pat
     # Déterminer la plage à mettre à jour
     rows = len(data_to_write)
     cols = len(data_to_write[0])
-    end_col_letter = gspread.utils.rowcol_to_addr(rows, cols)[0] # Obtient la lettre de la dernière colonne
+    end_col_letter = gspread.utils.rowcol_to_a1(rows, cols)[0] # Obtient la lettre de la dernière colonne
     end_cell = f"{end_col_letter}{rows}"
     
     # Plage complète pour la mise à jour (ex: 'A1:C10')

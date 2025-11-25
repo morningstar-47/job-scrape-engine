@@ -2,7 +2,6 @@
 import os
 import json
 from groq import Groq
-import pandas as pd
 from dotenv import load_dotenv
 
 class QuestionnerAgent:

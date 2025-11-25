@@ -1,15 +1,36 @@
 import requests
-import os
 import pycountry 
 from dotenv import load_dotenv
+import datetime
 
 load_dotenv()
+
+def get_country_code_pycountry(country_name_or_code):
+    # 1. Vérification si c'est déjà un code (2 lettres, majuscules)
+    potential_code = country_name_or_code.strip().upper()
+    if len(potential_code) == 2 and potential_code.isalpha():
+        # Vérifie si c'est un code ISO 3166-1 alpha-2 valide
+        try:
+            pycountry.countries.lookup(potential_code)
+            return potential_code
+        except LookupError:
+            pass # Continuer pour tenter la recherche par nom
+
+    # 2. Conversion par nom
+    try:
+        country = pycountry.countries.lookup(country_name_or_code)
+        return country.alpha_2
+    except LookupError:
+        print(f"Avertissement : Pays non reconnu : {country_name_or_code}")
+        return country_name_or_code # Retourne l'original si non trouvé
+
 
 def geocode_city(api_key, city_name, country_name):
     url = "https://maps.googleapis.com/maps/api/geocode/json"
 
     address = city_name
-    address += f", {country_name}"
+    country_code = get_country_code_pycountry(country_name)
+    address += f", {country_code}"
 
     params = {
         "address": address,
@@ -45,7 +66,7 @@ def geocode_city(api_key, city_name, country_name):
 
 def get_travel_time(api_key, origin_lat, origin_lng, dest_lat, dest_lng, travel_mode):
     url = "https://routes.googleapis.com/directions/v2:computeRoutes"
-
+    
     headers = {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": api_key,
@@ -78,18 +99,21 @@ def get_travel_time(api_key, origin_lat, origin_lng, dest_lat, dest_lng, travel_
         raise Exception(f"Erreur API : {response.text}")
 
     data = response.json()
-    duration_str = data["routes"][0]["duration"]  # ex: "3600s"
+    if data:
+        duration_str = data["routes"][0]["duration"]
 
-    # Conversion en minutes
-    seconds = int(duration_str.replace("s", ""))
-    minutes = seconds // 60
+        # Conversion en minutes
+        seconds = int(duration_str.replace("s", ""))
+        minutes = seconds // 60
 
-    return minutes
+        return minutes
+    else:
+        return 1000
 
 def travel_time_from_cities(api_key, origin_city, origin_country, destination_city, destination_country, travel_mode):
     # Étape 1 : géocodage
     origin_lat, origin_lng = geocode_city(api_key, origin_city, origin_country)
     dest_lat, dest_lng = geocode_city(api_key, destination_city, destination_country)
-
+    
     # Étape 2 : appel à Google Routes
     return get_travel_time(api_key, origin_lat, origin_lng, dest_lat, dest_lng, travel_mode)
