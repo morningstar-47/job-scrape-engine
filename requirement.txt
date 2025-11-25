@@ -4,3 +4,7 @@ openpyxl
 python-dotenv
 google-maps-routing
 pycountry
+gspread
+google-api-python-client 
+google-auth-httplib2 
+google-auth-oauthlib

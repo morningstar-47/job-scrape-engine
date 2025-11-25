@@ -5,6 +5,10 @@ from groq import Groq
 import pandas as pd
 from dotenv import load_dotenv
 from utils import travel_time_from_cities
+from sheets_writer import write_google_sheet
+
+TITRE_FEUILLE = "Mon Exemple de Feuille Python"
+CHEMIN_CREDS = 'credentials.json'
 
 class ClassifierAgent:
     load_dotenv()
@@ -61,8 +65,11 @@ class ClassifierAgent:
         jobs_scored = self.get_job_score()
         df = pd.DataFrame(jobs_scored).sort_values("score", ascending=False)
         df["status"] = "pending"
-        df.to_excel('job_scored.xlsx', index=False)
-        return jobs_scored
+        success = write_google_sheet(TITRE_FEUILLE, CHEMIN_CREDS)
+        if success:
+            return jobs_scored
+        else:
+            print("Erreur dans l'écriture de google sheet")
     
 if __name__ == "__main__":
     #Get job_offer_list
