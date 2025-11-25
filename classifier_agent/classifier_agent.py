@@ -6,6 +6,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from utils import travel_time_from_cities
 from sheets_writer import write_google_sheet
+from get_cv_parser import get_json_from_parser
 
 TITRE_FEUILLE = "Personnalized Job Offers"
 CHEMIN_CREDS = 'classifier_agent/credentials.json'
@@ -67,6 +68,7 @@ class ClassifierAgent:
         df["status"] = "pending"
         success = write_google_sheet(df, TITRE_FEUILLE, CHEMIN_CREDS, "A1")
         if success:
+            df.to_excel("job_scored.xlsx", index=False)
             return jobs_scored
         else:
             print("Erreur dans l'écriture de google sheet")
@@ -77,8 +79,7 @@ if __name__ == "__main__":
         job_offer_list = json.load(f)
     
     #Get parsed_resume
-    with open("classifier_agent/parsed_cv.json", "r", encoding="utf-8") as f:
-        parsed_resume = json.load(f)
+    parsed_resume = get_json_from_parser()
 
     classifier_agent = ClassifierAgent(job_offer_list, parsed_resume)
     classifier_agent.write_excel()
