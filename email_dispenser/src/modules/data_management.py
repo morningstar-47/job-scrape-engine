@@ -10,12 +10,10 @@ from google.oauth2.service_account import Credentials
 from gspread.exceptions import SpreadsheetNotFound, WorksheetNotFound
 
 # --- FIX: Changed absolute import (src.config) to relative import (..config) ---
-from config import SHEET_ID, SHEET_NAME, ID_COLUMN, STATUS_COLUMN, SCORE_COLUMN, LETTER_COLUMN, BATCH_SIZE, SERVICE_ACCOUNT_FILE, SCOPES,CV_FILE_PATH
+from config import SHEET_ID, SHEET_NAME, ID_COLUMN, STATUS_COLUMN, SCORE_COLUMN, LETTER_COLUMN, BATCH_SIZE, SERVICE_ACCOUNT_FILE, SCOPES,CV_FILE_PATH, MAX_RETRIES, RETRY_DELAY
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 5
-RETRY_DELAY = 2  # seconds
 
 class DataManager:
     """

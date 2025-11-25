@@ -67,6 +67,7 @@ class AgentOrchestrator:
                 letter = self.llm_module.generate_motivation_letter(offer,cv_data)
                 motivation_letters[offer[self.data_manager.id_col]] = letter
         
+        
             email_draft = self.llm_module.generate_consolidated_email(pending_rows,cv_data)
             if not motivation_letters :
                 logger.error(f"Skipping batch. Failed to generate or parse motivation letter draft from LLM.")
@@ -76,19 +77,25 @@ class AgentOrchestrator:
                 return
             logger.info("Successfully drafted consolidated email.")
             logger.debug(f"Subject: {email_draft['subject']}")
-
             # 3. Sending (External Service Integration Layer)
             recipient = CONSOLIDATED_RECIPIENT_EMAIL
+            
             try:
                 # Use the SMTPSender to attempt sending the email
-                is_sent = self.smtp_sender.send_email(recipient, email_draft['subject'], email_draft['body'])
+                # --- UPDATED: Passing the motivation_letters as attachments ---
+                is_sent = self.smtp_sender.send_email(
+                    recipient, 
+                    email_draft['subject'], 
+                    email_draft['body'],
+                    attachments=motivation_letters # <--- NEW ARGUMENT
+                )
                 
                 # 4. Confirmation & Status Update for ALL rows
+                # ... (rest of the Status Update logic remains the same) ...
                 if is_sent:
                     logger.info(f"Consolidated email successfully sent to {recipient}.")
                     # Update status for every single row in the batch using the handler
-                    print("motivation : ",motivation_letters)
-                    self.update_handler.handle_batch_sent(pending_rows, 'SENT',motivation_letters)
+                    self.update_handler.handle_batch_sent(pending_rows, 'SENT', motivation_letters)
 
                     logger.info(f"Successfully processed and updated status for all {num_offers} offers.")
                 else:
