@@ -3,6 +3,7 @@ import os
 import json
 from groq import Groq
 from dotenv import load_dotenv
+from get_cv_parser import get_json_from_parser
 
 class QuestionnerAgent:
     load_dotenv()
@@ -43,12 +44,14 @@ class QuestionnerAgent:
     
 if __name__ == "__main__":
     #Get job_offer_list
-    with open("questionner_agent/exemple_job.json", "r", encoding="utf-8") as f:
+    with open("xemple_job.json", "r", encoding="utf-8") as f:
         job_offer_list = json.load(f)
     
     #Get parsed_resume
-    with open("questionner_agent/parsed_cv.json", "r", encoding="utf-8") as f:
-        parsed_resume = json.load(f)
+   # with open("parsed_cv.json", "r", encoding="utf-8") as f:
+       # parsed_resume = json.load(f)
+    parsed_resume = get_json_from_parser()
+    parsed_resume = json.loads(parsed_resume["result"])
 
     questionner_agent = QuestionnerAgent(job_offer_list, parsed_resume)
     print(questionner_agent.get_questions())
