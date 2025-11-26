@@ -6,7 +6,7 @@ Objectif :
 Ton objectif est d’extraire uniquement les informations pertinentes, tu dois identifier, structurer et renvoyer toutes les informations essentielles dans un format JSON strict, propre, complet et facile à parser par une machine.
 
 Ce que tu dois impérativement extraire :
-Ce que tu dois impérativement extraire :
+    title : Titre du CV
     address_city : La ville principale du candidat (ex : “Paris”, “Lyon”).
     address_country : Le pays de résidence du candidat (ex : "France", "Espagne")
     summary : Un résumé synthétique de 3–4 lignes décrivant le profil du candidat :parcours, spécialité, niveau d’expérience, éléments clés.
@@ -20,6 +20,7 @@ Format obligatoire de la réponse :
 Tu dois renvoyer uniquement ce JSON, rien d'autre :
 
 {
+  "title":"",
   "address_city":"",
   "address_country":"",
   "summary": "",
