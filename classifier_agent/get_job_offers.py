@@ -1,7 +1,10 @@
 import http.client
 import urllib.parse
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-def search_jobs(role, city, num_pages=1, country="fr", date_posted="all"):
+def search_jobs(role, city, num_pages, country="fr", date_posted="all"):
     conn = http.client.HTTPSConnection("jsearch.p.rapidapi.com")
 
     params = {
@@ -14,7 +17,7 @@ def search_jobs(role, city, num_pages=1, country="fr", date_posted="all"):
     query_string = urllib.parse.urlencode(params)
 
     headers = {
-        'x-rapidapi-key': "c8b31874f8mshbf18214c60669dep1483fajsnbd95099cd31f",
+        'x-rapidapi-key': os.getenv("JOB_SCRAPPER_API_KEY"),
         'x-rapidapi-host': "jsearch.p.rapidapi.com"
     }
 

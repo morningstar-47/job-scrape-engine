@@ -81,7 +81,7 @@ if __name__ == "__main__":
     parsed_resume = json.loads(parsed_resume["result"])
 
     #Get job_offer_list
-    job_offer_list = search_jobs(parsed_resume["title"], parsed_resume['address_city'])
+    job_offer_list = search_jobs(parsed_resume["title"], parsed_resume['address_city'], num_pages = 3)
     job_offer_list = json.loads(job_offer_list)["data"]
 
     #Run classifier

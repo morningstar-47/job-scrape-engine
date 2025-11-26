@@ -9,9 +9,7 @@ ENDPOINT = f"{NGROK_URL}/results/lastest"
 def get_json_from_parser():
     """
     Fait une requête GET à l'API du CV Parser pour recevoir le JSON.
-    """
-    print(f"Tentative de récupération du JSON depuis: **{ENDPOINT}**")
-    
+    """    
     try:
         # Faire la requête GET
         response = requests.get(ENDPOINT)
@@ -21,7 +19,6 @@ def get_json_from_parser():
             print("\n✅ JSON reçu avec succès!")
             
             cv_json_data = response.json()
-            print("--- JSON reçu ---")
             
             return cv_json_data
         else:
