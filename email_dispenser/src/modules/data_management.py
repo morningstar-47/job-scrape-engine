@@ -85,21 +85,22 @@ class DataManager:
         try:
             # Loads the pre-filtered data (already limited, sorted, and filtered by the Google Sheet QUERY)
             df = pd.DataFrame(self.queue_worksheet.get_all_records())
-            
             if df.empty:
                 return pd.DataFrame()
 
             # --- Type Coercion and Critical Checks ---
             
             # 1. Row ID (CRITICAL for writing back to main sheet)
+            
             if self.row_id_col in df.columns:
-                 df[self.row_id_col] = pd.to_numeric(df[self.row_id_col], errors='coerce').fillna(-1).astype(int)
+                 df[self.row_id_col] = pd.to_numeric(df[self.row_id_col], errors='coerce').astype(int)
+                 
             else:
                  logger.critical(f"Required column '{self.row_id_col}' (absolute row number) missing from queue data.")
                  return pd.DataFrame() 
 
             # 2. Other columns
-            df[self.id_col] = pd.to_numeric(df[self.id_col], errors='coerce').fillna(-1).astype(int)
+            # df[self.id_col] = pd.to_numeric(df[self.id_col], errors='coerce').fillna(-1).astype(int)
             df[self.score_col] = pd.to_numeric(df[self.score_col], errors='coerce').fillna(0)
             
 
