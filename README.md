@@ -13,6 +13,82 @@ Un assistant virtuel intelligent développé avec LangChain, FastAPI et OpenAI, 
 - 🔍 Recherche d'emploi avec filtres avancés via API (RapidAPI JSearch)
 - 🌐 API REST complète avec documentation automatique
 
+## Diagramme Interface bot
+```mermaid
+sequenceDiagram
+    actor User
+    participant Client as Client<br/>(Web UI)
+    participant FastAPI as FastAPI<br/>chatbot-main
+    participant LLMSvc as LLMService
+    participant IntentDet as JobIntentDetector
+    participant JobSearch as JobSearchService<br/>(RapidAPI)
+    participant RAGChain as RAG Chain<br/>(LangChain)
+    participant VectorStore as VectorStoreService<br/>(ChromaDB)
+    participant MemSvc as MemoryService<br/>(Sessions)
+
+    User->>Client: Send chat message
+    Client->>FastAPI: POST /chat<br/>(message, session_id)
+    FastAPI->>MemSvc: get_memory(session_id)
+    MemSvc-->>FastAPI: ChatMessageHistory
+    FastAPI->>LLMSvc: chat(question, session_id)
+    LLMSvc->>IntentDet: detect_job_search_intent(message)
+    alt Job search detected
+        IntentDet-->>LLMSvc: (True, job_params)
+        LLMSvc->>JobSearch: search_jobs(query, country, ...)
+        JobSearch-->>LLMSvc: jobs array
+        LLMSvc->>MemSvc: add_job_search(session_id, results)
+    else No job search
+        IntentDet-->>LLMSvc: (False, {})
+    end
+    LLMSvc->>RAGChain: invoke(question + context)
+    RAGChain->>VectorStore: search(query)
+    VectorStore-->>RAGChain: documents + scores
+    RAGChain-->>LLMSvc: answer + sources
+    LLMSvc->>MemSvc: add_message(session_id, user_msg, ai_msg)
+    LLMSvc-->>FastAPI: ChatResponse<br/>(answer, sources, job_search)
+    FastAPI-->>Client: JSON response
+    Client-->>User: Display answer + results
+````
+    
+## Diagramme Search Jobs
+```mermaid
+sequenceDiagram
+    actor User
+    participant Client as Client (Browser/Curl)
+    participant FastAPI as FastAPI app.main
+    participant CVSvc as CVService (CV Extraction)
+    participant QuerySvc as QueryService (LLM Query Gen)
+    participant JobSearch as Job Scraper (RapidAPI JSearch)
+    participant JobSvc as JobService (Scoring)
+    participant Groq as Groq LLM
+
+    User->>Client: Upload CV + params
+    Client->>FastAPI: POST /analyze-cv-and-match-jobs (file, num_pages, max_jobs)
+    FastAPI->>CVSvc: extract_from_file(path, ext)
+    CVSvc->>Groq: Chat completion (CV analysis)
+    Groq-->>CVSvc: CVData JSON
+    CVSvc-->>FastAPI: CVData object
+    FastAPI->>QuerySvc: generate_search_query(cv_data)
+    QuerySvc->>Groq: Chat completion (query gen)
+    Groq-->>QuerySvc: search_query
+    QuerySvc-->>FastAPI: query string
+    FastAPI->>JobSearch: search_jobs(query, city, pages)
+    JobSearch-->>FastAPI: Job offers array
+    FastAPI->>JobSvc: score_jobs_parallel(cv_data, jobs)
+
+    par Job Scoring Loop
+        loop For each job (parallel)
+            JobSvc->>JobSvc: get_best_travel_time(job, cv_data)
+            JobSvc->>Groq: Chat completion (scoring)
+            Groq-->>JobSvc: scored_job JSON
+        end
+    end
+
+    JobSvc-->>FastAPI: sorted scored_jobs
+    FastAPI->>Client: JSON response (cv_data, query, counts, jobs)
+    Client-->>User: Display results
+````
+
 ## Prérequis
 
 - Python 3.9 ou supérieur
