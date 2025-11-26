@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant Virtuel - Exemple Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e8e8e8;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Chat Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.assistant {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Job Search Styles */
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .job-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .job-card {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .job-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .job-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .job-company {
+            color: #667eea;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .job-location {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .job-apply {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Assistant Virtuel LangChain</h1>
+            <p>Exemple d'intégration frontend</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('chat')">💬 Chat</button>
+            <button class="tab" onclick="switchTab('jobs')">🔍 Recherche d'emploi</button>
+        </div>
+
+        <div class="content">
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-content active">
+                <div class="chat-container">
+                    <div id="messages" class="messages"></div>
+                    <div class="chat-input-container">
+                        <input 
+                            type="text" 
+                            id="chat-input" 
+                            class="chat-input" 
+                            placeholder="Tapez votre message..."
+                            onkeypress="if(event.key === 'Enter') sendMessage()"
+                        />
+                        <button class="btn" onclick="sendMessage()" id="send-btn">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Search Tab -->
+            <div id="jobs-tab" class="tab-content">
+                <div class="search-form">
+                    <input 
+                        type="text" 
+                        id="job-query" 
+                        class="search-input" 
+                        placeholder="Rechercher un emploi (ex: développeur Python)"
+                    />
+                    <input 
+                        type="text" 
+                        id="job-country" 
+                        class="search-input" 
+                        placeholder="Pays (ex: France)"
+                    />
+                    <button class="btn" onclick="searchJobs()">Rechercher</button>
+                </div>
+                <div id="job-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        const sessionId = 'user-' + Date.now();
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Chat functionality
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            const messagesDiv = document.getElementById('messages');
+            addMessage('user', message);
+            input.value = '';
+            
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Envoi...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    addMessage('assistant', 'Erreur: ' + data.error);
+                } else {
+                    addMessage('assistant', data.answer);
+                }
+            } catch (error) {
+                addMessage('assistant', 'Erreur de connexion: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Envoyer';
+            }
+        }
+
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            messageDiv.textContent = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Job search functionality
+        async function searchJobs() {
+            const query = document.getElementById('job-query').value.trim();
+            const country = document.getElementById('job-country').value.trim();
+            
+            if (!query) {
+                alert('Veuillez entrer un terme de recherche');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('job-results');
+            resultsDiv.innerHTML = '<div class="loading">Recherche en cours...</div>';
+
+            try {
+                const params = new URLSearchParams({
+                    query: query,
+                    language: 'fr'
+                });
+                
+                if (country) {
+                    params.append('country', country);
+                }
+
+                const response = await fetch(`${API_BASE_URL}/jobs/search?${params}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<div class="error">Erreur: ${data.error}</div>`;
+                    return;
+                }
+
+                if (data.jobs && data.jobs.length > 0) {
+                    let html = `<h2 style="margin-bottom: 20px;">${data.total} emploi(s) trouvé(s)</h2>`;
+                    html += '<div class="job-list">';
+                    
+                    data.jobs.forEach(job => {
+                        html += `
+                            <div class="job-card">
+                                <div class="job-title">${job.job_title || 'Titre non spécifié'}</div>
+                                <div class="job-company">${job.employer_name || 'Entreprise non spécifiée'}</div>
+                                <div class="job-location">
+                                    ${[job.job_city, job.job_state, job.job_country].filter(Boolean).join(', ') || 'Localisation non spécifiée'}
+                                    ${job.job_is_remote ? ' (Télétravail)' : ''}
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <strong>Type:</strong> ${job.job_employment_type || 'N/A'}
+                                </div>
+                                ${job.job_apply_link ? `<a href="${job.job_apply_link}" target="_blank" class="job-apply">Postuler</a>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="loading">Aucun emploi trouvé</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Erreur de connexion: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize with welcome message
+        window.onload = function() {
+            addMessage('assistant', 'Bonjour ! Je suis votre assistant virtuel. Comment puis-je vous aider ?');
+        };
+    </script>
+</body>
+</html>
+

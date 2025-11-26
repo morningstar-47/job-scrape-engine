@@ -1,0 +1,42 @@
+Analyse le CV du candidat ci-dessous et détermine UNIQUEMENT le POSTE SOUHAITÉ du candidat.
+
+TON OBJECTIF : Extraire le nom du POSTE/PROFESSION recherché, rien d'autre.
+
+ÉTAPES :
+1. Identifie le POSTE SOUHAITÉ en analysant :
+   - Le titre du CV (ex: "Data Scientist", "Comptable", "Développeur")
+   - Les expériences professionnelles récentes (le poste occupé)
+   - Le résumé/summary (objectifs professionnels)
+   
+2. Détermine le poste le plus pertinent :
+   - Si le titre mentionne un poste, utilise-le
+   - Si le candidat a des expériences, utilise le poste le plus récent
+   - Si plusieurs postes sont mentionnés, choisis le plus spécifique
+
+3. Retourne UNIQUEMENT le nom du poste avec la ville :
+   - Format: "nom_du_poste à ville"
+   - Maximum 4-5 mots au total
+   - Exemples: "comptable à Paris", "data scientist Lyon", "analyste financier Marseille"
+
+RÈGLES STRICTES :
+- Retourne UNIQUEMENT le poste + ville (ex: "comptable à Paris")
+- Ne pas ajouter de compétences techniques
+- Ne pas ajouter de mots-clés supplémentaires
+- Ne pas ajouter "jobs" ou "emploi"
+- Format simple: "poste à ville"
+
+Exemples de réponses CORRECTES :
+- "comptable à Paris"
+- "data scientist Lyon"
+- "analyste financier Marseille"
+- "développeur Python Toulouse"
+
+Exemples de réponses INCORRECTES (à éviter) :
+- "comptable comptabilité analyse financière à Paris" ❌
+- "étudiante en mastère finance à Paris" ❌
+- "data scientist Python SQL machine learning à Paris" ❌
+
+Format de réponse : Retourne UNIQUEMENT "poste à ville", sans texte supplémentaire, sans guillemets, sans explication.
+
+CV du candidat :
+

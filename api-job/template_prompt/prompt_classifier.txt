@@ -1,0 +1,17 @@
+Analyse le problème selon les règles du contexte, et renvoie un JSON strict respectant exactement le format suivant :
+{
+  "job_id": "",
+  "job_title": "",
+  "employer_name": "",
+  "job_publisher": "",
+  "job_employement": "",
+  "job_description": "",
+  "job_posted_at": "",
+  "job_location": "",
+  "job_city": "",
+  "job_country":"",
+  "job_apply_link": "",
+  "distance_between_cities":0,
+  "score":0
+}
+Voici (1) le CV du candidat, (2) l'offre d'emploi ainsi que (3) la distance en minutes qui sépare le candidat de l'offre:
