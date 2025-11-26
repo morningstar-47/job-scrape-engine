@@ -3,6 +3,7 @@ Tu es un expert en recrutement et matching de profils techniques.
 
 La fiche candidat sera de la forme:
 {
+  "title":"",
   "address_city":"",
   "address_country":"",
   "summary": "",

@@ -4,9 +4,10 @@ import json
 from groq import Groq
 import pandas as pd
 from dotenv import load_dotenv
-from utils import travel_time_from_cities
+from utils import travel_time_from_cities, select_from_job
 from sheets_writer import write_google_sheet
 from get_cv_parser import get_json_from_parser
+from get_job_offers import search_jobs
 
 TITRE_FEUILLE = "Personnalized Job Offers"
 CHEMIN_CREDS = 'classifier_agent/credentials.json'
@@ -48,7 +49,7 @@ class ClassifierAgent:
         # Get the Groq API response:
         scored_jobs = []
         for job in job_offer_list:
-            print(job)
+            job = select_from_job(job)
             distance = self.get_best_travel_time(job, parsed_resume)
             get_score = self.client.chat.completions.create(
                 messages = [
@@ -75,15 +76,13 @@ class ClassifierAgent:
             print("Erreur dans l'écriture de google sheet")
     
 if __name__ == "__main__":
-    #Get job_offer_list
-    with open("exemple_job.json", "r", encoding="utf-8") as f:
-        job_offer_list = json.load(f)
-
     #Get parsed resume
-    with open("parsed_cv.json", "r", encoding="utf-8") as f:
-       parsed_resume = json.load(f)
-    #parsed_resume = get_json_from_parser()
-    #parsed_resume = json.loads(parsed_resume["result"])
+    parsed_resume = get_json_from_parser()
+    parsed_resume = json.loads(parsed_resume["result"])
+
+    #Get job_offer_list
+    job_offer_list = search_jobs(parsed_resume["title"], parsed_resume['address_city'])
+    job_offer_list = json.loads(job_offer_list)["data"]
 
     #Run classifier
     classifier_agent = ClassifierAgent(job_offer_list, parsed_resume)

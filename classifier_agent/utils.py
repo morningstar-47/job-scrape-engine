@@ -1,7 +1,6 @@
 import requests
 import pycountry 
 from dotenv import load_dotenv
-import datetime
 
 load_dotenv()
 
@@ -117,3 +116,12 @@ def travel_time_from_cities(api_key, origin_city, origin_country, destination_ci
     
     # Étape 2 : appel à Google Routes
     return get_travel_time(api_key, origin_lat, origin_lng, dest_lat, dest_lng, travel_mode)
+
+def select_from_job(job):
+    cles_a_garder = ["job_id", "job_title", "employer_name", "job_publisher", "job_description", "job_posted_at", "job_location", "job_city", "job_country", "job_apply_link"]
+    # Création du sous-dictionnaire
+    sous_dictionnaire = {
+        cle: job[cle]
+        for cle in cles_a_garder
+    }
+    return sous_dictionnaire
