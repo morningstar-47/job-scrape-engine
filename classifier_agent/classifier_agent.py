@@ -68,6 +68,7 @@ class ClassifierAgent:
         jobs_scored = self.get_job_score()
         df = pd.DataFrame(jobs_scored).sort_values("score", ascending=False)
         df["status"] = "pending"
+        df["cv"] = json.dumps(parsed_resume)
         success = write_google_sheet(df, TITRE_FEUILLE, CHEMIN_CREDS, "A1")
         if success:
             df.to_excel("job_scored.xlsx", index=False)
