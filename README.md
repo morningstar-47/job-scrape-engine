@@ -203,7 +203,7 @@ Le bot détecte automatiquement ces types de requêtes :
 
 ### Frontend
 
-Ouvrez `examples/frontend_example.html` dans votre navigateur pour une interface web fonctionnelle, ou consultez **[FRONTEND_API_DOCS.md](FRONTEND_API_DOCS.md)** pour intégrer dans React/Vue.js/vanilla JS.
+Ouvrez `chatbot-main/examples/frontend_example.html` dans votre navigateur pour une interface web fonctionnelle, ou consultez **[FRONTEND_API_DOCS.md](chatbot-main/FRONTEND_API_DOCS.md)** pour intégrer dans React/Vue.js/vanilla JS.
 
 ## 🏗️ Architecture
 
