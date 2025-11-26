@@ -47,8 +47,8 @@ Job Engine est un assistant conversationnel alimenté par l'IA qui combine :
 
 ```bash
 # 1. Cloner le projet
-git clone <repository-url>
-cd chatbot-langchain
+git clone https://github.com/morningstar-47/job-scrape-engine.git
+cd job-scrape-engine
 
 # 2. Créer l'environnement virtuel
 python -m venv venv
