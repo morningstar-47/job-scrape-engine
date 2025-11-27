@@ -28,7 +28,6 @@ class DataManager:
         self.status_col = STATUS_COLUMN
         self.score_col = SCORE_COLUMN
         self.letter_col = LETTER_COLUMN
-        self.posting_date_col = POSTING_DATE_COLUMN
         self.row_id_col = ROW_ID_COLUMN # Absolute row number column (CRITICAL for updates)
         self.cv_col = CV_COLUMN
         
@@ -92,7 +91,6 @@ class DataManager:
             # --- Type Coercion and Critical Checks ---
             
             # 1. Row ID (CRITICAL for writing back to main sheet)
-            print("column s ",df.columns)
             
             if self.row_id_col in df.columns:
                  df[self.row_id_col] = pd.to_numeric(df[self.row_id_col], errors='coerce').astype(int)

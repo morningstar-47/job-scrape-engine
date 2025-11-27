@@ -65,7 +65,6 @@ class AgentOrchestrator:
             # 2. Drafting (Core Agent Orchestration Layer)
             # Call the LLM ONCE with the entire list of data
             motivation_letters = {}
-            print("pending rows " ,pending_rows)
             for offer in pending_rows:
                 letter = self.llm_module.generate_motivation_letter(offer,cv_data)
                 motivation_letters[offer[self.data_manager.id_col]] = letter

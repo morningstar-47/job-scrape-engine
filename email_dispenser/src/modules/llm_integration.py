@@ -5,8 +5,16 @@ import os
 from typing import Dict, Any, List
 # Import the Groq Python SDK and its specific error types
 from groq import Groq, APIConnectionError, APIStatusError, RateLimitError
+from dotenv import load_dotenv
 
-from config import GROQ_API_KEY, GROQ_MODEL_NAME, MAX_RETRIES
+
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL_NAME = os.getenv("GROQ_MODEL_NAME") 
+MAX_RETRIES = int(os.getenv("MAX_RETRIES"))
+
+
 
 logger = logging.getLogger(__name__)
 
