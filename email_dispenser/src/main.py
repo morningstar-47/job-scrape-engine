@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+import time # <--- NEW IMPORT for scheduling
 
 # --- Path Setup to handle ModuleNotFoundError: No module named 'src' ---
 # This ensures Python can find 'src/config.py' and 'src/modules/data_management.py'
@@ -13,7 +14,7 @@ if project_root not in sys.path:
 from config import BATCH_SIZE, ID_COLUMN, CONSOLIDATED_RECIPIENT_EMAIL
 from modules.data_management import DataManager
 from modules.llm_integration import LLMInteractionModule
-from modules.service_integration import SMTPSender, StatusUpdateHandler # NEW IMPORT
+from modules.service_integration import SMTPSender, StatusUpdateHandler 
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -51,6 +52,7 @@ class AgentOrchestrator:
             pending_rows = self.data_manager.get_pending_batch(BATCH_SIZE)
 
             cv_data = self.data_manager.cv_data
+
             if not pending_rows:
                 logger.info("No pending rows found. Agent run finished.")
                 return
@@ -63,7 +65,7 @@ class AgentOrchestrator:
             # 2. Drafting (Core Agent Orchestration Layer)
             # Call the LLM ONCE with the entire list of data
             motivation_letters = {}
-            print(pending_rows)
+            print("pending rows " ,pending_rows)
             for offer in pending_rows:
                 letter = self.llm_module.generate_motivation_letter(offer,cv_data)
                 motivation_letters[offer[self.data_manager.id_col]] = letter
@@ -119,5 +121,26 @@ class AgentOrchestrator:
 
 
 if __name__ == "__main__":
+    # Define the daily interval (24 hours * 60 minutes * 60 seconds)
+    DAILY_RUN_INTERVAL_SECONDS = 24 * 60 * 60
+    
     orchestrator = AgentOrchestrator()
-    orchestrator.run_batch()
+    
+    logger.info("Agent Orchestrator starting daily execution loop...")
+    
+    # Start the infinite loop
+    while True:
+        try:
+            # Execute the core agent logic
+            orchestrator.run_batch()
+            
+            logger.info(f"Daily batch run completed. Waiting for {DAILY_RUN_INTERVAL_SECONDS // 3600} hours before next run.")
+            
+            # Wait for 24 hours before the next execution
+            time.sleep(DAILY_RUN_INTERVAL_SECONDS)
+            
+        except Exception as e:
+            logger.critical(f"A critical error occurred in the main scheduling loop: {e}. Sleeping for 1 hour before attempting restart.")
+            # If a critical failure happens (e.g., unexpected data error), wait a shorter time
+            # (e.g., 1 hour = 3600 seconds) to avoid immediate failure loops.
+            time.sleep(3600)

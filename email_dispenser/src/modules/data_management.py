@@ -30,6 +30,7 @@ class DataManager:
         self.letter_col = LETTER_COLUMN
         self.posting_date_col = POSTING_DATE_COLUMN
         self.row_id_col = ROW_ID_COLUMN # Absolute row number column (CRITICAL for updates)
+        self.cv_col = CV_COLUMN
         
         # Authenticate and get both worksheet objects
         self.main_worksheet: Optional[gspread.Worksheet]
@@ -91,6 +92,7 @@ class DataManager:
             # --- Type Coercion and Critical Checks ---
             
             # 1. Row ID (CRITICAL for writing back to main sheet)
+            print("column s ",df.columns)
             
             if self.row_id_col in df.columns:
                  df[self.row_id_col] = pd.to_numeric(df[self.row_id_col], errors='coerce').astype(int)
@@ -180,7 +182,6 @@ class DataManager:
         letter_col_index = self._get_sheet_col_index(self.letter_col, self.main_worksheet)
         
         if letter_col_index and self.main_worksheet:
-            print("motivation : ", sheet_row_number )
             try:
                 # Write back to the ORIGINAL (MAIN) Google Sheet
                 self.main_worksheet.update_cell(sheet_row_number, letter_col_index, json.dumps(letter_content))
@@ -194,15 +195,6 @@ class DataManager:
 
     def _load_cv_data(self) -> Dict[str, Any]:
         """Loads the candidate's CV data from a local JSON file."""
-        if not os.path.exists(CV_FILE_PATH):
-            logger.critical(f"CV file not found at: {CV_FILE_PATH}")
-            return {}
-        try:
-            with open(CV_FILE_PATH, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError as e:
-            logger.critical(f"Error decoding CV JSON file: {e}")
-            return {}
-        except Exception as e:
-            logger.critical(f"Error reading CV file: {e}")
-            return {}
+        if self.cv_col in self.df.columns :
+            return self.df[self.cv_col][0]
+        logger.error(f"can't find the cv column {self.cv_col}")
